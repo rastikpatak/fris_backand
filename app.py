@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template
 
 app = Flask(__name__)
 
@@ -16,7 +16,7 @@ database = {
         {"id": 10, "name": "michal", "surname": "kolar", "img": " "}
 ]}
 
-@app.route('/')
+@app.route('/students')
 def list_students():
     return jsonify(database["students"])
 
@@ -26,7 +26,7 @@ def find_student(id):
     return jsonify(student)
 @app.route('/str')
 def pusti_stranku():
-    return (index.html)
+    return render_template("index.html")
 
 if __name__ == '__main__':
     app.run(debug=True)
