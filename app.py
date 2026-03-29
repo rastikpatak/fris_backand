@@ -24,8 +24,9 @@ def list_students():
 def find_student(id):
     student = database["students"][id - 1]
     return jsonify(student)
-
-
+@app.route('/str')
+def pusti_stranku():
+    return (index.html)
 
 if __name__ == '__main__':
     app.run(debug=True)
