@@ -23,7 +23,7 @@
             setInterval(() => {
                 mojd.style.backgroundColor = "yellow"
             }, 200)
-            raw_odp =fetch("")
+            raw_odp =fetch("/students")
             .then((raw_odp) => {console.log("odpoved.data")})
             
             // stiahne odpovedd z BoozeAPI
@@ -34,10 +34,10 @@
                     console.log(odpoved.data)
 
                     // pre kazdy drink vyrobi <img> element a pripoji do mojDivVJs
-                    odpoved.data.forEach((img) => {
+                    odpoved.data.forEach((student) => {
                         const drinkImg = document.createElement("img")
 
-                        drinkImg.src = drink.image
+                        drinkImg.src = student.img
                         drinkImg.width = 200
                         drinkImg.height = 220
                         //drinkImg.style.display = "grid"
@@ -48,7 +48,6 @@
                         //drinkImg -fit=cover;
 
                         // pripoji ("append") ako dieta do mojDivVJs
-                        
                         mojd.appendChild(drinkImg)
                 })
             })
