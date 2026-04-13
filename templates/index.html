@@ -28,32 +28,28 @@
             
             // stiahne odpovedd z BoozeAPI
             fetch("/students")
-            .then((odpoved_raw) => {
-                odpoved_raw.json().then((odpoved) => {
-                    // dekoduje odpoved (a vypise do konzole)
-                    console.log(odpoved.data)
+            .then((res) => res.json())
+            .then((odpoved) => {
+                console.log(odpoved)
 
-                    // pre kazdy drink vyrobi <img> element a pripoji do mojDivVJs
-                    odpoved.data.forEach((student) => {
-                        const drinkImg = document.createElement("img")
+                odpoved.forEach((student) => {
+                const drinkImg = document.createElement("img")
 
-                        drinkImg.src = student.img
-                        drinkImg.width = 200
-                        drinkImg.height = 220
-                        //drinkImg.style.display = "grid"
-                        //drinkImg.style.margin = "15px"
-                        drinkImg.style.objectFit = "cover"
-                        drinkImg.style.borderRadius = "10px"
+                if (student.img && student.img.trim() !== "") {
+                    drinkImg.src = student.img
+                } else {
+                    drinkImg.src = "https://via.placeholder.com/200x220?text=No+Image"
+                }
 
-                        //drinkImg -fit=cover;
+                drinkImg.width = 200
+                drinkImg.height = 220
+                drinkImg.style.objectFit = "cover"
+                drinkImg.style.borderRadius = "10px"
 
-                        // pripoji ("append") ako dieta do mojDivVJs
-                        mojd.appendChild(drinkImg)
+                mojd.appendChild(drinkImg)
                 })
             })
-        })
-
-
+            .catch((err) => console.error(err))
         </script> 
 
     </body>
