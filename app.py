@@ -26,7 +26,7 @@ def find_student(id):
     return jsonify(student)
 @app.route('/str')
 def pusti_stranku():
-    return render_template("index2.html")
+    return render_template("index.html")
 
 if __name__ == '__main__':
     app.run(debug=True)
