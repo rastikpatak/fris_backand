@@ -1,7 +1,8 @@
 from flask import Flask, jsonify, render_template
+from flask_cors import CORS
 
 app = Flask(__name__)
-
+CORS(app)
 database = {
     'students': [
         {"id": 1, "name": "samuel", "surname": "martis", "img": "http://www.gcm.sk/images/logo.jpg"},
