@@ -5,8 +5,8 @@ app = Flask(__name__)
 CORS(app)
 database = {
     'students': [
-        {"id": 1, "name": "samuel", "surname": "martis", "img": "http://www.gcm.sk/images/logo.jpg"},
-        {"id": 2, "name": "andrej", "surname": "bucko", "img": "http://www.gcm.sk/images/logo.jpg"},
+        {"id": 1, "name": "samuel", "surname": "martis", "img": ""},
+        {"id": 2, "name": "andrej", "surname": "bucko", "img": ""},
         {"id": 3, "name": "rasto", "surname": "patak", "img": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Magnus_Carlsen_in_2025.jpg"},
         {"id": 4, "name": "martin", "surname": "cepcek", "img": " "},
         {"id": 5, "name": "peter", "surname": "marcin", "img": " "},
