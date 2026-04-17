@@ -1,56 +1,36 @@
 <html>  
     <head> 
-        <title> title </title>
-
+        <title>Students</title>
     </head>
     <body>
-        <h1>nieco</h1>
-        <p>text</p>
+        <h1>Students</h1>
         <div id="mojd"></div>
+        <script>
+            const mojd = document.getElementById("mojd")
+            mojd.style.display = "grid"
+            mojd.style.gridTemplateColumns = "repeat(4, 1fr)"
+            mojd.style.gap = "20px"
+            mojd.style.justifyItems = "center"
 
-        <script type="text/javascript">
-            console.log("ide to")
-            const mojd =
-                document.getElementById("mojd")
-                mojd.style.display = "grid"
-                mojd.style.gridTemplateColumns = "repeat(4, 1fr)" // 4 obrázky v riadku
-                mojd.style.gap = "20px"
-                mojd.style.justifyItems = "center"
-            //mojd.textContent = "jsc"
-            setTimeout(function() {
-                mojd.style.backgroundColor = "red";
-            }, 200)
-            setInterval(() => {
-                mojd.style.backgroundColor = "yellow"
-            }, 200)
-            raw_odp =fetch("/students")
-            .then((raw_odp) => {console.log("odpoved.data")})
-            
-            // stiahne odpovedd z BoozeAPI
             fetch("/students")
-            .then((res) => res.json())
-            .then((odpoved) => {
-                console.log(odpoved)
-
-                odpoved.forEach((student) => {
-                const drinkImg = document.createElement("img")
-
-                if (student.img && student.img.trim() !== "") {
-                    drinkImg.src = student.img
-                } else {
-                    drinkImg.src = "https://via.placeholder.com/200x220?text=No+Image"
-                }
-
-                drinkImg.width = 200
-                drinkImg.height = 220
-                drinkImg.style.objectFit = "cover"
-                drinkImg.style.borderRadius = "10px"
-
-                mojd.appendChild(drinkImg)
+                .then((res) => res.json())
+                .then((odpoved) => {
+                    console.log(odpoved)
+                    odpoved.forEach((student) => {
+                        const drinkImg = document.createElement("img")
+                        if (student.img && student.img.trim() !== "") {
+                            drinkImg.src = student.img
+                        } else {
+                            drinkImg.src = "https://placehold.co/200x220?text=No+Image"
+                        }
+                        drinkImg.width = 200
+                        drinkImg.height = 220
+                        drinkImg.style.objectFit = "cover"
+                        drinkImg.style.borderRadius = "10px"
+                        mojd.appendChild(drinkImg)
+                    })
                 })
-            })
-            .catch((err) => console.error(err))
+                .catch((err) => console.error(err))
         </script> 
-
     </body>
 </html>
