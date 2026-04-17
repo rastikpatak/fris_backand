@@ -7,7 +7,7 @@ database = {
     'students': [
         {"id": 1, "name": "samuel", "surname": "martis", "img": "http://www.gcm.sk/images/logo.jpg"},
         {"id": 2, "name": "andrej", "surname": "bucko", "img": "http://www.gcm.sk/images/logo.jpg"},
-        {"id": 3, "name": "rasto", "surname": "patak", "img": ""},
+        {"id": 3, "name": "rasto", "surname": "patak", "img": "https://www.google.com/imgres?q=magnus%20carlson&imgurl=https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2F1%2F1a%2FMagnus_Carlsen_in_2025.jpg&imgrefurl=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMagnus_Carlsen&docid=2VArNktZpNYc6M&tbnid=7hkGYPak_LXjaM&vet=12ahUKEwj1zuiL__STAxW98LsIHcu2N6sQnPAOegQIHhAB..i&w=1558&h=1906&hcb=2&ved=2ahUKEwj1zuiL__STAxW98LsIHcu2N6sQnPAOegQIHhAB"},
         {"id": 4, "name": "martin", "surname": "cepcek", "img": " "},
         {"id": 5, "name": "peter", "surname": "marcin", "img": " "},
         {"id": 6, "name": "janko", "surname": "kral", "img": " "},
