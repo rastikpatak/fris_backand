@@ -23,7 +23,7 @@
       border-radius: 16px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.6);
       overflow: hidden;
-      height: 80vh;
+      height: 85vh;
       display: flex;
       flex-direction: column;
     }
@@ -36,7 +36,7 @@
       margin: 15px 0;
       padding: 15px 20px;
       border-radius: 20px;
-      max-width: 80%;
+      max-width: 82%;
       line-height: 1.5;
     }
     .user {
@@ -79,7 +79,7 @@
 </head>
 <body>
 
-  <h1>🤖 Môj Lokálny AI (Qwen3)</h1>
+  <h1>🤖 Môj Lokálny AI</h1>
 
   <div id="chat-container">
     <div id="chat-box"></div>
@@ -95,8 +95,8 @@
     const userInput = document.getElementById('user-input');
     const sendBtn = document.getElementById('send-btn');
 
-    // Tvoja Cloudflare URL
-    const OLLAMA_URL = "https://eagle-sullivan-comfort-three.trycloudflare.com";
+    // === Tvoja nová URL ===
+    const OLLAMA_URL = "https://attempting-opera-seq-dishes.trycloudflare.com";
 
     let conversationHistory = [];
 
@@ -127,10 +127,11 @@
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "qwen3:14b",
+            model: "qwen3:14b",        // môžeš zmeniť na "qwen3:8b" ak je pomalý
             messages: conversationHistory,
             stream: true,
-            temperature: 0.75
+            temperature: 0.75,
+            num_ctx: 8192
           })
         });
 
@@ -164,14 +165,14 @@
         conversationHistory.push({ role: "assistant", content: responseText });
 
       } catch (err) {
-        thinkingDiv.textContent = "❌ Chyba: Skontroluj, či Ollama beží doma a Cloudflare Tunnel je spustený.";
+        thinkingDiv.textContent = "❌ Chyba spojenia.\nSkontroluj:\n1. Ollama beží doma\n2. Cloudflare Tunnel je spustený\n3. Model je stiahnutý (qwen3:14b)";
       }
     }
 
     userInput.addEventListener("keypress", e => { if (e.key === "Enter") sendMessage(); });
     sendBtn.addEventListener("click", sendMessage);
 
-    addMessage("assistant", "Ahoj! Som tvoj lokálny AI. Ako ti môžem pomôcť?");
+    addMessage("assistant", "Ahoj! Som tvoj lokálny AI (beží na tvojom PC).\nAko ti môžem pomôcť?");
   </script>
 
 </body>
