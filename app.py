@@ -5,11 +5,14 @@ import requests
 app = Flask(__name__)
 CORS(app)
 
-# 🔗 nastav URL
-OLLAMA_URL = "https://attempting-opera-seq-dishes.trycloudflare.com/"
-# alebo Cloudflare:
-# OLLAMA_URL = "https://attempting-opera-seq-dishes.trycloudflare.com"
+# 🔗 DÔLEŽITÉ: nastav správnu URL
+OLLAMA_URL = "https://attempting-opera-seq-dishes.trycloudflare.com"
+# ak beží lokálne:
+# OLLAMA_URL = "http://localhost:11434"
 
+# -------------------
+# DATA (nechávame tvoje)
+# -------------------
 database = {
     'students': [
         {"id": 1, "name": "samuel", "surname": "martis", "img": ""},
@@ -25,6 +28,14 @@ database = {
     ]
 }
 
+# -------------------
+# ROUTES
+# -------------------
+
+@app.route('/')
+def home():
+    return "Backend beží ✅"
+
 @app.route('/students')
 def list_students():
     return jsonify(database["students"])
@@ -34,22 +45,22 @@ def find_student(id):
     student = database["students"][id - 1]
     return jsonify(student)
 
-@app.route('/str')
-def pusti_stranku():
-    return render_template("index.html")
-
 @app.route('/ai')
-def pusti_ai_stranku():
-    return render_template("ai.html")
+def ai_page():
+    return render_template("ai.html")  # musí byť v /templates
 
-# 🔥 HLAVNÝ FIX
+# -------------------
+# 🔥 HLAVNÝ CHAT ENDPOINT
+# -------------------
+
 @app.route('/chat', methods=['POST'])
 def chat():
     try:
         r = requests.post(
             f"{OLLAMA_URL}/api/chat",
             json=request.json,
-            stream=True
+            stream=True,
+            timeout=120
         )
 
         def generate():
@@ -60,9 +71,11 @@ def chat():
         return Response(generate(), content_type="text/plain")
 
     except Exception as e:
-        print(e)
-        return {"error": str(e)}, 500
+        print("ERROR:", e)
+        return jsonify({"error": str(e)}), 500
 
+
+# -------------------
 
 if __name__ == '__main__':
     app.run(debug=True)
