@@ -33,5 +33,24 @@ def pusti_stranku():
 def pusti_ai_stranku():
     return render_template("ai.html")
 
+@app.route('/chat', methods=['POST'])
+def chat():
+    try:
+        r = requests.post(
+            f"{OLLAMA_URL}/api/chat",
+            json=request.json,
+            stream=True
+        )
+
+        def generate():
+            for chunk in r.iter_content(chunk_size=1024):
+                if chunk:
+                    yield chunk
+
+        return Response(generate(), content_type="text/plain")
+
+    except Exception as e:
+        return {"error": str(e)}, 500
+        
 if __name__ == '__main__':
     app.run(debug=True)
