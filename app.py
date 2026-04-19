@@ -6,7 +6,7 @@ app = Flask(__name__)
 CORS(app)
 
 # 🔗 nastav URL
-OLLAMA_URL = "http://localhost:11434"
+OLLAMA_URL = "https://attempting-opera-seq-dishes.trycloudflare.com/"
 # alebo Cloudflare:
 # OLLAMA_URL = "https://attempting-opera-seq-dishes.trycloudflare.com"
 
