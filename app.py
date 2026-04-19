@@ -30,7 +30,7 @@ def pusti_stranku():
     return render_template("index.html")
 
 @app.route('/ai')
-def pusti_stranku():
+def pusti_ai_stranku():
     return render_template("ai.html")
 
 if __name__ == '__main__':
