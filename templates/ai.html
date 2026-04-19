@@ -1,158 +1,120 @@
 <!DOCTYPE html>
 <html lang="sk">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Môj Lokálny AI</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background: #0f0f0f;
-      color: #eee;
-    }
-    h1 {
-      text-align: center;
-      color: #00ccff;
-    }
-    #chat-container {
-      max-width: 900px;
-      margin: 30px auto;
-      background: #1a1a1a;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-      overflow: hidden;
-      height: 85vh;
-      display: flex;
-      flex-direction: column;
-    }
-    #chat-box {
-      flex: 1;
-      padding: 25px;
-      overflow-y: auto;
-    }
-    .message {
-      margin: 15px 0;
-      padding: 15px 20px;
-      border-radius: 20px;
-      max-width: 82%;
-      line-height: 1.5;
-    }
-    .user {
-      background: #007bff;
-      color: white;
-      align-self: flex-end;
-      margin-left: auto;
-    }
-    .assistant {
-      background: #2a2a2a;
-      color: #ddd;
-      align-self: flex-start;
-    }
-    #input-area {
-      padding: 20px;
-      background: #222;
-      border-top: 1px solid #333;
-      display: flex;
-      gap: 12px;
-    }
-    #user-input {
-      flex: 1;
-      padding: 16px 20px;
-      border: none;
-      border-radius: 30px;
-      background: #333;
-      color: white;
-      font-size: 17px;
-    }
-    #send-btn {
-      padding: 16px 32px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 30px;
-      cursor: pointer;
-    }
-    .thinking { color: #888; font-style: italic; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Môj Lokálny AI</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #0f0f0f; color: #eee; }
+        h1 { text-align: center; color: #00ccff; }
+        #chat-container { max-width: 900px; margin: 30px auto; background: #1a1a1a; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); overflow: hidden; height: 85vh; display: flex; flex-direction: column; }
+        #chat-box { flex: 1; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .message { margin: 10px 0; padding: 12px 18px; border-radius: 15px; max-width: 80%; word-wrap: break-word; line-height: 1.5; }
+        .user { background: #007bff; color: white; align-self: flex-end; }
+        .assistant { background: #2a2a2a; color: #ddd; align-self: flex-start; }
+        #input-area { padding: 20px; background: #222; border-top: 1px solid #333; display: flex; gap: 12px; }
+        #user-input { flex: 1; padding: 16px 20px; border: none; border-radius: 30px; background: #333; color: white; font-size: 17px; }
+        #send-btn { padding: 16px 32px; background: #007bff; color: white; border: none; border-radius: 30px; cursor: pointer; }
+        .thinking { color: #888; font-style: italic; }
+    </style>
 </head>
 <body>
 
-  <h1>🤖 Môj Lokálny AI</h1>
+    <h1>🤖 Môj Lokálny AI</h1>
 
-  <div id="chat-container">
-    <div id="chat-box"></div>
-    
-    <div id="input-area">
-      <input type="text" id="user-input" placeholder="Napíš správu..." autocomplete="off">
-      <button id="send-btn">Odoslať</button>
+    <div id="chat-container">
+        <div id="chat-box"></div>
+        <div id="input-area">
+            <input type="text" id="user-input" placeholder="Napíš správu..." autocomplete="off">
+            <button id="send-btn">Odoslať</button>
+        </div>
     </div>
-  </div>
 
-<script>
-    async function sendMessage() {
-        const message = userInput.value.trim();
-        if (!message) return;
+    <script>
+        // 1. Definícia premenných (TOTO TI CHÝBALO)
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        let conversationHistory = [];
 
-        // Pridanie správy od teba do okna
-        addMessage('user', message);
-        conversationHistory.push({ role: "user", content: message });
-        userInput.value = '';
+        // 2. Funkcia na pridávanie správ do okna
+        function addMessage(role, content) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${role}`;
+            msgDiv.textContent = content;
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            return msgDiv;
+        }
 
-        // Vytvorenie bubliny pre AI
-        const assistantMsgDiv = addMessage('assistant', 'Premýšľam...');
-        assistantMsgDiv.classList.add('thinking');
+        // 3. Hlavná funkcia na odosielanie
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
 
-        try {
-            const response = await fetch('/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    model: "qwen3:14b", 
-                    messages: conversationHistory,
-                    stream: true
-                })
-            });
+            addMessage('user', message);
+            conversationHistory.push({ role: "user", content: message });
+            userInput.value = '';
 
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let fullAiResponse = "";
+            const assistantMsgDiv = addMessage('assistant', 'Premýšľam...');
+            assistantMsgDiv.classList.add('thinking');
 
-            assistantMsgDiv.textContent = "";
-            assistantMsgDiv.classList.remove('thinking');
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: "qwen3:14b", 
+                        messages: conversationHistory,
+                        stream: true
+                    })
+                });
 
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullAiResponse = "";
 
-                const chunk = decoder.decode(value, { stream: true });
-                const lines = chunk.split('\n');
-                
-                for (const line of lines) {
-                    if (line.trim() === "") continue;
+                assistantMsgDiv.textContent = "";
+                assistantMsgDiv.classList.remove('thinking');
 
-                    try {
-                        const json = JSON.parse(line);
-                        // 💡 Tu vyťahujeme len text, nie tie JSON zátvorky
-                        if (json.message && json.message.content) {
-                            fullAiResponse += json.message.content;
-                            assistantMsgDiv.textContent = fullAiResponse;
-                            chatBox.scrollTop = chatBox.scrollHeight;
-                        }
-                    } catch (e) {
-                        // Preskočíme neúplné riadky
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    const lines = chunk.split('\n');
+                    
+                    for (const line of lines) {
+                        if (line.trim() === "") continue;
+                        try {
+                            const json = JSON.parse(line);
+                            // Vyberáme len čistý text
+                            if (json.message && json.message.content) {
+                                fullAiResponse += json.message.content;
+                                assistantMsgDiv.textContent = fullAiResponse;
+                                chatBox.scrollTop = chatBox.scrollHeight;
+                            }
+                        } catch (e) { }
                     }
                 }
-            }
-            conversationHistory.push({ role: "assistant", content: fullAiResponse });
+                conversationHistory.push({ role: "assistant", content: fullAiResponse });
 
-        } catch (err) {
-            console.error(err);
-            assistantMsgDiv.textContent = "❌ Chyba: Backend neodpovedá.";
+            } catch (err) {
+                console.error(err);
+                assistantMsgDiv.textContent = "❌ Chyba: Backend neodpovedá.";
+                assistantMsgDiv.classList.remove('thinking');
+            }
         }
-    }
-</script>
+
+        // 4. Prepojenie na tlačidlo a Enter
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        // Úvodná správa
+        addMessage('assistant', 'Ahoj! Už by som mal fungovať správne. Skús mi niečo napísať.');
+    </script>
 
 </body>
 </html>
