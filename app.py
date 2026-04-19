@@ -29,5 +29,9 @@ def find_student(id):
 def pusti_stranku():
     return render_template("index.html")
 
+@app.route('/ai')
+def pusti_stranku():
+    return render_template("ai.html")
+
 if __name__ == '__main__':
     app.run(debug=True)
