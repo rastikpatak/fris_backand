@@ -91,92 +91,67 @@
   </div>
 
 <script>
-    const chatBox = document.getElementById('chat-box');
-    const userInput = document.getElementById('user-input');
-    const sendBtn = document.getElementById('send-btn');
-
-    // ✅ DÔLEŽITÉ: Voláme tvoj Flask backend, nie priamo Cloudflare.
-    // Keďže HTML a Flask bežia na tom istom hostingu (Render), stačí "/chat"
-    const BACKEND_URL = "/chat"; 
-
-    let conversationHistory = [];
-
-    // Funkcia na pridanie správy do okna
-    function addMessage(role, content) {
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `message ${role}`;
-        msgDiv.textContent = content;
-        chatBox.appendChild(msgDiv);
-        chatBox.scrollTop = chatBox.scrollHeight;
-        return msgDiv;
-    }
-
     async function sendMessage() {
         const message = userInput.value.trim();
         if (!message) return;
 
-        // 1. Pridáme správu užívateľa do UI a histórie
+        // Pridanie správy od teba do okna
         addMessage('user', message);
         conversationHistory.push({ role: "user", content: message });
         userInput.value = '';
 
-        // 2. Vytvoríme "bublinu" pre odpoveď asistenta
-        const assistantMsgDiv = addMessage('assistant', '...');
+        // Vytvorenie bubliny pre AI
+        const assistantMsgDiv = addMessage('assistant', 'Premýšľam...');
         assistantMsgDiv.classList.add('thinking');
-        assistantMsgDiv.textContent = "Premýšľa...";
 
         try {
-            // 3. Pošleme požiadavku na náš Flask backend
-            const response = await fetch(BACKEND_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    model: "qwen3:14b", // Uisti sa, že tento model máš stiahnutý
+                    model: "qwen3:14b", 
                     messages: conversationHistory,
                     stream: true
                 })
             });
 
-            if (!response.ok) throw new Error("Backend neodpovedá správne.");
-
-            // 4. Spracovanie STREAMU (postupné písanie)
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
             let fullAiResponse = "";
 
-            assistantMsgDiv.classList.remove('thinking');
             assistantMsgDiv.textContent = "";
+            assistantMsgDiv.classList.remove('thinking');
 
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
 
                 const chunk = decoder.decode(value, { stream: true });
+                const lines = chunk.split('\n');
                 
-                // Flask posiela čistý text, tak ho rovno pridávame
-                fullAiResponse += chunk;
-                assistantMsgDiv.textContent = fullAiResponse;
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }
+                for (const line of lines) {
+                    if (line.trim() === "") continue;
 
-            // 5. Uložíme finálnu odpoveď do histórie pre kontext
+                    try {
+                        const json = JSON.parse(line);
+                        // 💡 Tu vyťahujeme len text, nie tie JSON zátvorky
+                        if (json.message && json.message.content) {
+                            fullAiResponse += json.message.content;
+                            assistantMsgDiv.textContent = fullAiResponse;
+                            chatBox.scrollTop = chatBox.scrollHeight;
+                        }
+                    } catch (e) {
+                        // Preskočíme neúplné riadky
+                    }
+                }
+            }
             conversationHistory.push({ role: "assistant", content: fullAiResponse });
 
         } catch (err) {
-            console.error("Chyba:", err);
-            assistantMsgDiv.classList.remove('thinking');
-            assistantMsgDiv.textContent = "❌ Chyba: Nepodarilo sa spojiť s AI. Skontroluj, či ti beží Cloudflare Tunnel a Ollama.";
+            console.error(err);
+            assistantMsgDiv.textContent = "❌ Chyba: Backend neodpovedá.";
         }
     }
-
-    // Event listenery
-    sendBtn.addEventListener("click", sendMessage);
-    userInput.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") sendMessage();
-    });
-
-    // Úvodná správa
-    addMessage("assistant", "Ahoj! Som tvoj lokálny AI. Ako ti môžem dnes pomôcť?");
 </script>
 
 </body>
