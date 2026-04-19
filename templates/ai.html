@@ -6,35 +6,37 @@
   <title>Môj Lokálny AI</title>
   <style>
     body {
-      font-family: 'Segoe UI', Arial, sans-serif;
+      font-family: Arial, sans-serif;
       margin: 0;
-      padding: 0;
+      padding: 20px;
       background: #0f0f0f;
       color: #eee;
     }
+    h1 {
+      text-align: center;
+      color: #00ccff;
+    }
     #chat-container {
-      width: 100%;
-      max-width: 850px;
+      max-width: 900px;
       margin: 30px auto;
       background: #1a1a1a;
       border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
       overflow: hidden;
-      height: 90vh;
+      height: 80vh;
       display: flex;
       flex-direction: column;
     }
     #chat-box {
       flex: 1;
-      padding: 20px;
+      padding: 25px;
       overflow-y: auto;
-      background: #1a1a1a;
     }
     .message {
       margin: 15px 0;
-      padding: 14px 18px;
-      border-radius: 18px;
-      max-width: 85%;
+      padding: 15px 20px;
+      border-radius: 20px;
+      max-width: 80%;
       line-height: 1.5;
     }
     .user {
@@ -49,34 +51,35 @@
       align-self: flex-start;
     }
     #input-area {
-      padding: 16px;
+      padding: 20px;
       background: #222;
       border-top: 1px solid #333;
       display: flex;
-      gap: 10px;
+      gap: 12px;
     }
     #user-input {
       flex: 1;
-      padding: 14px 20px;
+      padding: 16px 20px;
       border: none;
       border-radius: 30px;
       background: #333;
       color: white;
-      font-size: 16px;
+      font-size: 17px;
     }
     #send-btn {
-      padding: 14px 28px;
+      padding: 16px 32px;
       background: #007bff;
       color: white;
       border: none;
       border-radius: 30px;
       cursor: pointer;
-      font-weight: bold;
     }
     .thinking { color: #888; font-style: italic; }
   </style>
 </head>
 <body>
+
+  <h1>🤖 Môj Lokálny AI (Qwen3)</h1>
 
   <div id="chat-container">
     <div id="chat-box"></div>
@@ -92,8 +95,8 @@
     const userInput = document.getElementById('user-input');
     const sendBtn = document.getElementById('send-btn');
 
-    // Tvoja aktuálna Cloudflare URL
-    const OLLAMA_URL = "https://attempting-opera-seq-dishes.trycloudflare.com";
+    // Tvoja Cloudflare URL
+    const OLLAMA_URL = "https://eagle-sullivan-comfort-three.trycloudflare.com";
 
     let conversationHistory = [];
 
@@ -113,64 +116,62 @@
       conversationHistory.push({ role: "user", content: message });
       userInput.value = '';
 
-      const assistantDiv = document.createElement('div');
-      assistantDiv.className = "message assistant thinking";
-      assistantDiv.textContent = "Premýšľa...";
-      chatBox.appendChild(assistantDiv);
+      const thinkingDiv = document.createElement('div');
+      thinkingDiv.className = "message assistant thinking";
+      thinkingDiv.textContent = "Premýšľa...";
+      chatBox.appendChild(thinkingDiv);
       chatBox.scrollTop = chatBox.scrollHeight;
 
       try {
-        const response = await fetch(`${OLLAMA_URL}/api/chat`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const res = await fetch(`${OLLAMA_URL}/api/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "qwen3:14b",        // zmeň na qwen3:8b ak chceš rýchlejší
+            model: "qwen3:14b",
             messages: conversationHistory,
             stream: true,
-            temperature: 0.7
+            temperature: 0.75
           })
         });
 
-        const reader = response.body.getReader();
+        const reader = res.body.getReader();
         const decoder = new TextDecoder();
-        let assistantMessage = "";
+        let responseText = "";
 
-        assistantDiv.classList.remove('thinking');
-        assistantDiv.textContent = "";
+        thinkingDiv.classList.remove("thinking");
+        thinkingDiv.textContent = "";
 
         while (true) {
-          const { value, done } = await reader.read();
+          const { done, value } = await reader.read();
           if (done) break;
 
           const chunk = decoder.decode(value);
-          const lines = chunk.split('\n');
+          const lines = chunk.split("\n");
 
           for (const line of lines) {
-            if (line.trim() === '') continue;
+            if (!line.trim()) continue;
             try {
               const data = JSON.parse(line);
               if (data.message?.content) {
-                assistantMessage += data.message.content;
-                assistantDiv.textContent = assistantMessage;
+                responseText += data.message.content;
+                thinkingDiv.textContent = responseText;
                 chatBox.scrollTop = chatBox.scrollHeight;
               }
-            } catch (e) {}
+            } catch(e) {}
           }
         }
 
-        conversationHistory.push({ role: "assistant", content: assistantMessage });
+        conversationHistory.push({ role: "assistant", content: responseText });
 
-      } catch (error) {
-        assistantDiv.textContent = "Chyba: Skontroluj, či Ollama beží a Cloudflare Tunnel je aktívny.";
+      } catch (err) {
+        thinkingDiv.textContent = "❌ Chyba: Skontroluj, či Ollama beží doma a Cloudflare Tunnel je spustený.";
       }
     }
 
-    // Odoslanie Enterom
-    userInput.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
-    sendBtn.addEventListener('click', sendMessage);
+    userInput.addEventListener("keypress", e => { if (e.key === "Enter") sendMessage(); });
+    sendBtn.addEventListener("click", sendMessage);
 
-    // Úvodná správa
-    addMessage('assistant', 'Ahoj! Som tvoj lokálny AI. Ako ti môžem pomôcť?');
+    addMessage("assistant", "Ahoj! Som tvoj lokálny AI. Ako ti môžem pomôcť?");
   </script>
 
 </body>
