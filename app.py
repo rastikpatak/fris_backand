@@ -45,7 +45,7 @@ def find_student(id):
     student = database["students"][id - 1]
     return jsonify(student)
 
-@app.route('/ai')
+@app.route('/ai2')
 def ai_page():
     return render_template("ai.html")  # musí byť v /templates
 
