@@ -96,8 +96,11 @@
     const sendBtn = document.getElementById('send-btn');
 
     // === Tvoja nová URL ===
-    const OLLAMA_URL = "https://attempting-opera-seq-dishes.trycloudflare.com";
+    const API = "https://fris-backand.onrender.com";
 
+fetch(`${API}/chat`, {
+  method: "POST",
+  
     let conversationHistory = [];
 
     function addMessage(role, content) {
