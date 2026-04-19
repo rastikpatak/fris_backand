@@ -91,88 +91,94 @@
   </div>
 
   <script>
+<script>
     const chatBox = document.getElementById('chat-box');
     const userInput = document.getElementById('user-input');
     const sendBtn = document.getElementById('send-btn');
 
-    // === Tvoja nová URL ===
-    const API = "https://attempting-opera-seq-dishes.trycloudflare.com/";
-  
+    // ✅ DÔLEŽITÉ: Voláme tvoj Flask backend, nie priamo Cloudflare.
+    // Keďže HTML a Flask bežia na tom istom hostingu (Render), stačí "/chat"
+    const BACKEND_URL = "/chat"; 
+
     let conversationHistory = [];
 
+    // Funkcia na pridanie správy do okna
     function addMessage(role, content) {
-      const msgDiv = document.createElement('div');
-      msgDiv.className = `message ${role}`;
-      msgDiv.textContent = content;
-      chatBox.appendChild(msgDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${role}`;
+        msgDiv.textContent = content;
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        return msgDiv;
     }
 
     async function sendMessage() {
-      const message = userInput.value.trim();
-      if (!message) return;
+        const message = userInput.value.trim();
+        if (!message) return;
 
-      addMessage('user', message);
-      conversationHistory.push({ role: "user", content: message });
-      userInput.value = '';
+        // 1. Pridáme správu užívateľa do UI a histórie
+        addMessage('user', message);
+        conversationHistory.push({ role: "user", content: message });
+        userInput.value = '';
 
-      const thinkingDiv = document.createElement('div');
-      thinkingDiv.className = "message assistant thinking";
-      thinkingDiv.textContent = "Premýšľa...";
-      chatBox.appendChild(thinkingDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
+        // 2. Vytvoríme "bublinu" pre odpoveď asistenta
+        const assistantMsgDiv = addMessage('assistant', '...');
+        assistantMsgDiv.classList.add('thinking');
+        assistantMsgDiv.textContent = "Premýšľa...";
 
-      try {
-        const res = await fetch(`${OLLAMA_URL}/api/chat`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "qwen3:14b",        // môžeš zmeniť na "qwen3:8b" ak je pomalý
-            messages: conversationHistory,
-            stream: true,
-            temperature: 0.75,
-            num_ctx: 8192
-          })
-        });
+        try {
+            // 3. Pošleme požiadavku na náš Flask backend
+            const response = await fetch(BACKEND_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    model: "qwen3:14b", // Uisti sa, že tento model máš stiahnutý
+                    messages: conversationHistory,
+                    stream: true
+                })
+            });
 
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let responseText = "";
+            if (!response.ok) throw new Error("Backend neodpovedá správne.");
 
-        thinkingDiv.classList.remove("thinking");
-        thinkingDiv.textContent = "";
+            // 4. Spracovanie STREAMU (postupné písanie)
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let fullAiResponse = "";
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+            assistantMsgDiv.classList.remove('thinking');
+            assistantMsgDiv.textContent = "";
 
-          const chunk = decoder.decode(value);
-          const lines = chunk.split("\n");
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
 
-          for (const line of lines) {
-            if (!line.trim()) continue;
-            try {
-              const data = JSON.parse(line);
-              if (data.message?.content) {
-                responseText += data.message.content;
-                thinkingDiv.textContent = responseText;
+                const chunk = decoder.decode(value, { stream: true });
+                
+                // Flask posiela čistý text, tak ho rovno pridávame
+                fullAiResponse += chunk;
+                assistantMsgDiv.textContent = fullAiResponse;
                 chatBox.scrollTop = chatBox.scrollHeight;
-              }
-            } catch(e) {}
-          }
+            }
+
+            // 5. Uložíme finálnu odpoveď do histórie pre kontext
+            conversationHistory.push({ role: "assistant", content: fullAiResponse });
+
+        } catch (err) {
+            console.error("Chyba:", err);
+            assistantMsgDiv.classList.remove('thinking');
+            assistantMsgDiv.textContent = "❌ Chyba: Nepodarilo sa spojiť s AI. Skontroluj, či ti beží Cloudflare Tunnel a Ollama.";
         }
-
-        conversationHistory.push({ role: "assistant", content: responseText });
-
-      } catch (err) {
-        thinkingDiv.textContent = "❌ Chyba spojenia.\nSkontroluj:\n1. Ollama beží doma\n2. Cloudflare Tunnel je spustený\n3. Model je stiahnutý (qwen3:14b)";
-      }
     }
 
-    userInput.addEventListener("keypress", e => { if (e.key === "Enter") sendMessage(); });
+    // Event listenery
     sendBtn.addEventListener("click", sendMessage);
+    userInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") sendMessage();
+    });
 
-    addMessage("assistant", "Ahoj! Som tvoj lokálny AI (beží na tvojom PC).\nAko ti môžem pomôcť?");
+    // Úvodná správa
+    addMessage("assistant", "Ahoj! Som tvoj lokálny AI. Ako ti môžem dnes pomôcť?");
+</script>
   </script>
 
 </body>
