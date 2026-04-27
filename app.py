@@ -6,7 +6,7 @@ app = Flask(__name__)
 CORS(app)
 
 # 🔗 DÔLEŽITÉ: nastav správnu URL
-OLLAMA_URL = "https://did-exposure-vhs-taylor.trycloudflare.com/"
+OLLAMA_URL = "https://did-exposure-vhs-taylor.trycloudflare.com"
 # ak beží lokálne:
 # OLLAMA_URL = "http://localhost:11434"
 
