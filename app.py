@@ -27,8 +27,7 @@ def get_students():
             "id": r[0],
             "name": r[1],
             "surname": r[2],
-            "personality": r[3],
-            "img": r[4]
+            "img": r[3]
         })
 
     cur.close()
@@ -43,7 +42,7 @@ def add_student():
     cur = conn.cursor()
 
     cur.execute("""
-        INSERT INTO students (name, surname, personality, img)
+        INSERT INTO students (id, name, surname, img)
         VALUES (%s, %s, %s, %s)
         RETURNING id
     """, (
