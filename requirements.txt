@@ -4,3 +4,4 @@ flask_cors
 requests
 psycopg2
 render_template
+subprocess
