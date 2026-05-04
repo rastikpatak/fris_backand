@@ -1,6 +1,5 @@
 import psycopg2
-import subprocess
-subprocess.run(["python", "1sp.py"])
+
 database = {
     'students': [
         {"id": 1, "name": "samuel", "surname": "martis", "img": ""},
