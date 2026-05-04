@@ -1,81 +1,157 @@
-from flask import Flask, jsonify, render_template, request, Response
+from flask import Flask, jsonify, request
 from flask_cors import CORS
-import requests
+import psycopg2
+from groq import Groq
+import os
 
 app = Flask(__name__)
 CORS(app)
 
-# 🔗 DÔLEŽITÉ: nastav správnu URL
-OLLAMA_URL = "https://proper-tokyo-bald-perfume.trycloudflare.com"
-# ak beží lokálne:
-# OLLAMA_URL = "http://localhost:11434"
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-# -------------------
-# DATA (nechávame tvoje)
-# -------------------
-database = {
-    'students': [
-        {"id": 1, "name": "samuel", "surname": "martis", "img": ""},
-        {"id": 2, "name": "andrej", "surname": "bucko", "img": ""},
-        {"id": 3, "name": "rasto", "surname": "patak", "img": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Magnus_Carlsen_in_2025.jpg"},
-        {"id": 4, "name": "martin", "surname": "cepcek", "img": ""},
-        {"id": 5, "name": "peter", "surname": "marcin", "img": ""},
-        {"id": 6, "name": "janko", "surname": "kral", "img": ""},
-        {"id": 7, "name": "lubo", "surname": "feldek", "img": ""},
-        {"id": 8, "name": "ivan", "surname": "lesnik", "img": ""},
-        {"id": 9, "name": "jozef", "surname": "mrkvicka", "img": ""},
-        {"id": 10, "name": "michal", "surname": "kolar", "img": ""}
-    ]
-}
+memory = {}
 
-# -------------------
-# ROUTES
-# -------------------
+# DB
+def get_db_connection():
+    return psycopg2.connect(
+        host="dpg-d7ng5n2qqhas73frva90-a.frankfurt-postgres.render.com",
+        database="postgres_3eru",
+        user="postgres_3eru_user",
+        password="mOnYuHR6gLCRFzYhin9DSFpaTmd0lu9l",
+        port= 5432,
+    )
 
-@app.route('/')
-def home():
-    return "Backend beží ✅"
+# ======================
+# STUDENTS
+# ======================
 
-@app.route('/students')
-def list_students():
-    return jsonify(database["students"])
+@app.route('/students', methods=["GET"])
+def get_students():
+    conn = get_db_connection()
+    cur = conn.cursor()
 
-@app.route('/students/<int:id>')
-def find_student(id):
-    student = database["students"][id - 1]
-    return jsonify(student)
+    cur.execute("SELECT id, name, surname, personality, img FROM students")
+    rows = cur.fetchall()
 
-@app.route('/ai')
-def ai_page():
-    return render_template("ai.html")  # musí byť v /templates
+    result = []
+    for r in rows:
+        result.append({
+            "id": r[0],
+            "name": r[1],
+            "surname": r[2],
+            "personality": r[3],
+            "img": r[4]
+        })
 
-# -------------------
-# 🔥 HLAVNÝ CHAT ENDPOINT
-# -------------------
+    cur.close()
+    conn.close()
+    return jsonify(result)
 
-@app.route('/chat', methods=['POST'])
+@app.route('/students', methods=["POST"])
+def add_student():
+    data = request.json
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO students (name, surname, personality, img)
+        VALUES (%s, %s, %s, %s)
+        RETURNING id
+    """, (
+        data["name"],
+        data["surname"],
+        data["personality"],
+        data["img"]
+    ))
+
+    new_id = cur.fetchone()[0]
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return jsonify({"id": new_id})
+
+@app.route('/students/<int:id>', methods=["PUT"])
+def update_student(id):
+    data = request.json
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE students
+        SET name=%s, surname=%s, personality=%s, img=%s
+        WHERE id=%s
+    """, (
+        data["name"],
+        data["surname"],
+        data["personality"],
+        data["img"],
+        id
+    ))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return jsonify({"message": "updated"})
+
+@app.route('/students/<int:id>', methods=["DELETE"])
+def delete_student(id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("DELETE FROM students WHERE id=%s", (id,))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return jsonify({"message": "deleted"})
+
+# ======================
+# CHAT
+# ======================
+
+@app.route('/chat', methods=["POST"])
 def chat():
-    try:
-        r = requests.post(
-            f"{OLLAMA_URL}/api/chat",
-            json=request.json,
-            stream=True,
-            timeout=120
-        )
+    data = request.json
 
-        def generate():
-            for chunk in r.iter_content(chunk_size=1024):
-                if chunk:
-                    yield chunk
+    name = data["name"]
+    personality = data["personality"]
+    message = data["message"]
 
-        return Response(generate(), content_type="text/plain")
+    if name not in memory:
+        memory[name] = []
 
-    except Exception as e:
-        print("ERROR:", e)
-        return jsonify({"error": str(e)}), 500
+    messages = [
+        {
+            "role": "system",
+            "content": f"""
+You are a student named {name}.
+Personality: {personality}.
+Speak short and natural.
+"""
+        }
+    ]
+
+    messages += memory[name]
+    messages.append({"role": "user", "content": message})
+
+    completion = client.chat.completions.create(
+        model="llama-3.1-8b-instant",
+        messages=messages
+    )
+
+    reply = completion.choices[0].message.content
+
+    memory[name].append({"role": "user", "content": message})
+    memory[name].append({"role": "assistant", "content": reply})
+
+    return jsonify({"reply": reply})
 
 
-# -------------------
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
