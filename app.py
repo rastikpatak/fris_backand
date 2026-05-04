@@ -1,13 +1,10 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import psycopg2
-from groq import Groq
 import os
 
 app = Flask(__name__)
 CORS(app)
-
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 memory = {}
 
