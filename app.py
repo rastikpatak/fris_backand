@@ -18,7 +18,7 @@ def get_db_connection():
 def get_students():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT id, name, surname, personality, img FROM students")
+    cur.execute("SELECT id, name, surname, img FROM students")
     rows = cur.fetchall()
 
     result = []
